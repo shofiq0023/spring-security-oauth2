@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>Demo</title>
+    <meta name="description" content=""/>
+    <meta name="viewport" content="width=device-width"/>
+    <base href="/"/>
+    <link rel="stylesheet" type="text/css" href="/webjars/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+    <script type="text/javascript" src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/webjars/js-cookie/js.cookie.js"></script>
+</head>
+<body>
+	<div class="container unauthenticated">
+	    login With GitHub: <a href="/oauth2/authorization/github">click here</a><br>
+	    With Google: <a href="/oauth2/authorization/google">click here</a>
+	</div>
+	<div class="container authenticated" id="output" style="display:none">
+	    Logged in as: <span id="user"></span><br>
+	</div>
+	<div class="container authenticated">
+	    <button onClick="logout()" class="btn btn-primary">Logout</button>
+	  </div>
+	</div>
+	
+<script type="text/javascript">
+    $.get("/user", function(data) {
+		console.log(data.name.attributes);
+        $("#output").html(`
+        	<div class="container" id="output">
+				<img src="${data.name.attributes.avatar_url || data.name.attributes.picture}" style="width: 240px;">
+				<h4>Name: ${data.name.attributes.name}</h4>
+				<p>${data.name.attributes.bio || ""}</p>
+				<p>Works at: ${data.name.attributes.company || "N/A"}</p>
+				<p>Email: ${data.name.attributes.email}</p>
+			</div>
+        `);
+        $(".unauthenticated").hide()
+        $(".authenticated").show()
+    });
+    
+    var logout = function() {
+    	$.post("/logout", function() {
+        	$("#user").html('');
+        	$(".unauthenticated").show();
+        	$(".authenticated").hide();
+    	})
+    	return true;
+	}
+	
+	$.ajaxSetup({
+	  beforeSend : function(xhr, settings) {
+	    if (settings.type == 'POST' || settings.type == 'PUT'
+	        || settings.type == 'DELETE') {
+	      if (!(/^http:.*/.test(settings.url) || /^https:.*/
+	        .test(settings.url))) {
+	        // Only send the token to relative URLs i.e. locally.
+	        xhr.setRequestHeader("X-XSRF-TOKEN",
+	          Cookies.get('XSRF-TOKEN'));
+	      }
+	    }
+	  }
+	});
+	
+	
+</script>
+</body>
+</html>
